@@ -6,7 +6,7 @@ A simple filewatcher with basic extension filtering and watching systems (built 
     watch [--import] <import path> [--ext] <extensions>
     [--build] [--bin] <bin path to store> [--cmd] <cmd_to_rerun>
 
-##examples
+##Examples
 
   - Build project directory on any change:
 
