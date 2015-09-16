@@ -199,6 +199,7 @@ func watch(command, importable, bin, exts string, dobuild bool, args []string) e
 			ubin = pkgs.BinDir
 		}
 
+		log.Printf("Using bin path: %s", ubin)
 		// lets install
 		_, err = goDeps("./")
 
@@ -260,6 +261,10 @@ func watch(command, importable, bin, exts string, dobuild bool, args []string) e
 		we, _ := <-watch.Event
 
 		exo := filepath.Ext(we.Name)
+
+		if filepath.ToSlash(we.Name) == filepath.ToSlash(ubin) {
+			continue
+		}
 
 		log.Printf("Watch: %s -> %s with extensions: %s", exo, we.Name, extens)
 
