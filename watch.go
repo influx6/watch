@@ -98,7 +98,7 @@ func runBin(bindir, bin string, args []string) chan bool {
 	var relunch = make(chan bool)
 	go func() {
 		binfile := fmt.Sprintf("%s/%s", bindir, bin)
-		cmdline := append([]string{bin}, args...)
+		// cmdline := append([]string{bin}, args...)
 		var proc *os.Process
 
 		for dosig := range relunch {
@@ -114,23 +114,17 @@ func runBin(bindir, bin string, args []string) chan bool {
 				continue
 			}
 
-			log.Printf("Exc Command: %s", binfile)
-
 			cmd := exec.Command(binfile, args...)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
-
-			log.Printf("Running Command: %s", cmdline)
 
 			if err := cmd.Start(); err != nil {
 				log.Printf("Error starting process: %s", err)
 			}
 
-			log.Printf("Setting process")
 			proc = cmd.Process
 		}
 	}()
-	log.Printf("Returning channel")
 	return relunch
 }
 
@@ -248,7 +242,6 @@ func watch(command, importable, bin, exts string, dobuild, withdir bool, args []
 			ubin = pkgs.BinDir
 		}
 
-		log.Printf("Using bin path: %s", ubin)
 		// lets install
 		_, err = goDeps("./")
 
@@ -325,6 +318,12 @@ func watch(command, importable, bin, exts string, dobuild, withdir bool, args []
 
 		exo := filepath.Ext(we.Name)
 
+		//if its a .git directory skip it
+		if strings.Contains(filepath.ToSlash(we.Name), ".git") {
+			continue
+		}
+
+		//if its our bin directory skip it
 		if filepath.ToSlash(we.Name) == filepath.ToSlash(ubin) {
 			continue
 		}
