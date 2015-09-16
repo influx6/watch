@@ -134,9 +134,9 @@ func runBin(bindir, bin string, args []string) chan bool {
 	return relunch
 }
 
-func buildPkgWatcher(pkpath string) (*fsnotify.Watcher, error) {
+func buildPkgWatcher(pkpath string, assets map[string]bool) (*fsnotify.Watcher, error) {
 	ws, err := fsnotify.NewWatcher()
-	add2Watcher(ws, pkpath, map[string]bool{})
+	add2Watcher(ws, pkpath, assets)
 	return ws, err
 }
 
@@ -144,6 +144,55 @@ func buildWatcher(pkpath string) (*fsnotify.Watcher, error) {
 	ws, err := fsnotify.NewWatcher()
 	ws.Watch(pkpath)
 	return ws, err
+}
+
+func hasIn(paths []string, dt string) bool {
+	for _, so := range paths {
+		if strings.Contains(so, dt) || so == dt {
+			return true
+		}
+	}
+	return false
+}
+
+func watchDir(ws *fsnotify.Watcher, dir string, assets map[string]bool, skip []string) {
+
+	mo, err := os.Stat(dir)
+
+	if err != nil {
+		return
+	}
+
+	if !mo.IsDir() {
+		return
+	}
+
+	filepath.Walk(filepath.ToSlash(dir), func(path string, info os.FileInfo, err error) error {
+
+		if strings.Contains(path, ".git") {
+			return nil
+		}
+
+		if info == nil {
+			return nil
+		}
+
+		if hasIn(skip, path) {
+			return nil
+		}
+
+		// if !info.IsDir() {
+		// 	return nil
+		// }
+
+		if assets[path] {
+			return nil
+		}
+
+		ws.Watch(path)
+		assets[path] = true
+		return nil
+	})
 }
 
 func add2Watcher(ws *fsnotify.Watcher, pkgpath string, assets map[string]bool) {
@@ -167,7 +216,7 @@ func add2Watcher(ws *fsnotify.Watcher, pkgpath string, assets map[string]bool) {
 	}
 }
 
-func watch(command, importable, bin, exts string, dobuild bool, args []string) error {
+func watch(command, importable, bin, exts string, dobuild, withdir bool, args []string) error {
 	log.Printf("Command: %s %s %s %t", command, importable, bin, dobuild)
 
 	extcls := multispaces.ReplaceAllString(exts, " ")
@@ -223,11 +272,25 @@ func watch(command, importable, bin, exts string, dobuild bool, args []string) e
 		var err error
 		var watch *fsnotify.Watcher
 
+		added := make(map[string]bool)
+
 		if dobuild {
-			watch, err = buildPkgWatcher(importable)
+			watch, err = buildPkgWatcher(importable, added)
 		} else {
-			watch, err = buildWatcher("./")
+			if !added["./"] {
+				watch, err = buildWatcher("./")
+			}
 		}
+
+		//lets watch the current directory also if allowed
+		if withdir && err == nil {
+			wod, ex := os.Getwd()
+
+			if ex == nil && wod != "" {
+				watchDir(watch, wod, added, []string{ubin})
+			}
+		}
+
 		return watch, err
 	}
 
@@ -334,6 +397,7 @@ var version = "0.0.1"
 func main() {
 	exts := flag.String("ext", "", "a space seperated string of extensions to watch")
 	cmd := flag.String("cmd", "", "Command to run instead on every change")
+	withdir := flag.Bool("dir", false, "This sets the current directories and subdirectories to be watched")
 	bindir := flag.String("bin", "./bin", "The build directory for storing the build file")
 	importdir := flag.String("import", "", "Command to run instead on every change")
 
@@ -346,7 +410,7 @@ func main() {
 
 	build := (*importdir != "")
 
-	err := watch(*cmd, *importdir, *bindir, *exts, build, flag.Args())
+	err := watch(*cmd, *importdir, *bindir, *exts, build, *withdir, flag.Args())
 
 	if err != nil {
 		log.Printf("Errored: %s", err.Error())
