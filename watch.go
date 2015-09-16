@@ -249,7 +249,7 @@ func watch(command, importable, bin, exts string, dobuild, withdir bool, args []
 			return err
 		}
 
-		log.Printf("Building Pkg(%s) bin to %s with name: %s", pkgs.ImportPath, ubin, buildName)
+		log.Printf("Building Pkg(%s) bin to %s \nUsing name: %s", pkgs.ImportPath, ubin, buildName)
 
 		done, err := gobuild(ubin, buildName)
 
