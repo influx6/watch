@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strings"
 
 	"github.com/howeyc/fsnotify"
 )
@@ -37,6 +38,33 @@ func goDeps(targetdir string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+//goRun runs the runs a command
+func goRun(cmd string) string {
+	var cmdline []string
+	com := strings.Split(cmd, " ")
+
+	if len(com) < 0 {
+		return ""
+	}
+
+	if len(com) == 1 {
+		cmdline = append(cmdline, com...)
+	} else {
+		cmdline = append(cmdline, com[0])
+		cmdline = append(cmdline, com[1:]...)
+	}
+
+	//setup the executor and use a shard buffer
+	cmdo := exec.Command(cmdline[0], cmdline[1:]...)
+	buf := bytes.NewBuffer([]byte{})
+	cmdo.Stdout = buf
+	cmdo.Stderr = buf
+
+	_ = cmdo.Run()
+
+	return buf.String()
 }
 
 //gobuild runs the build process and returns true/false and an error
@@ -260,6 +288,10 @@ func watch(command, importable, bin, exts string, dobuild bool, args []string) e
 
 		log.Printf("Re-initiating watch scans .....")
 
+		if command != "" {
+			log.Printf("Running cmd '%s' with result: '%s'", command, goRun(command))
+		}
+
 		if dobuild {
 			if err = buildHandler(); err != nil {
 				return err
@@ -288,7 +320,7 @@ func usage() {
 	fmt.Printf(`Watch:
     About: provides a simple but combined go dir builder and file watcher
     Version: %s
-    Usage: watch [--import] <import path> [--cmd] <cmd_to_rerun> [--ext] <extensions> [--build] [--bin] <bin path to store>
+    Usage: watch [--import] <import path> [--cmd] <cmd_to_rerun> [--ext] <extensions> [--bin] <bin path to store>
     `, version)
 }
 
@@ -297,7 +329,6 @@ var version = "0.0.1"
 func main() {
 	exts := flag.String("ext", "", "a space seperated string of extensions to watch")
 	cmd := flag.String("cmd", "", "Command to run instead on every change")
-	build := flag.Bool("build", false, "Build project directory with go")
 	bindir := flag.String("bin", "./bin", "The build directory for storing the build file")
 	importdir := flag.String("import", "", "Command to run instead on every change")
 
@@ -308,7 +339,9 @@ func main() {
 		return
 	}
 
-	err := watch(*cmd, *importdir, *bindir, *exts, *build, flag.Args())
+	build := (*importdir != "")
+
+	err := watch(*cmd, *importdir, *bindir, *exts, build, flag.Args())
 
 	if err != nil {
 		log.Printf("Errored: %s", err.Error())
