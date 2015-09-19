@@ -34,7 +34,7 @@ func goDeps(targetdir string) (bool, error) {
 	err := cmd.Run()
 
 	if buf.Len() > 0 {
-		return false, fmt.Errorf("go install failed: %s: %s", buf.String(), err.Error())
+		return false, fmt.Errorf("go get failed: %s: %s", buf.String(), err.Error())
 	}
 
 	return true, nil
