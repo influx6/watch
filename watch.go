@@ -175,6 +175,7 @@ func watchDir(ws *fsnotify.Watcher, dir string, assets map[string]bool, skip []s
 			return nil
 		}
 
+		// log.Printf("adding: %s", path)
 		// if !info.IsDir() {
 		// 	return nil
 		// }
@@ -246,7 +247,8 @@ func watch(command, importable, bin, exts string, dobuild, withdir bool, args []
 		_, err = goDeps("./")
 
 		if err != nil {
-			return err
+			log.Printf("go.install.err: %s", err.Error())
+			// return err
 		}
 
 		log.Printf("Building Pkg %s \nBin: %s \nUsing name: %s", pkgs.ImportPath, ubin, buildName)
