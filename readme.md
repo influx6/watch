@@ -1,6 +1,6 @@
 #Watch
 [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/influx6/watch)
-[![Travis]](https://travis-ci.org/influx6/watch.svg?branch=master)
+[![Travis](https://travis-ci.org/influx6/watch.svg?branch=master)](https://travis-ci.org/influx6/watch)
 
 A simple filewatcher with basic extension filtering and watching systems (built of [skelterjoin/rerun](https://github.com/skelterjohn/rerun))
 
