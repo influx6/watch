@@ -17,6 +17,12 @@ A simple filewatcher with basic extension filtering and watching systems (built 
       watch  --import github.com/influx6/todo
      ```
 
+  - Watch project directory import (and the current directory) path only without building for changes then run a command:
+
+     ```
+      watch  --import github.com/influx6/todo --dir --cmd "gopherjs build" --nobin
+     ```
+
   - Build project directory and subdirectories files on any change:
 
      ```

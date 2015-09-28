@@ -211,7 +211,7 @@ func add2Watcher(ws *fsnotify.Watcher, pkgpath string, assets map[string]bool) {
 	}
 }
 
-func watch(command, importable, bin, exts string, dobuild, withdir bool, args []string) error {
+func watch(command, importable, bin, exts string, dobuild, watchbuild, withdir bool, args []string) error {
 	log.Printf("Command: %s %s %s %t", command, importable, bin, dobuild)
 
 	extcls := multispaces.ReplaceAllString(exts, " ")
@@ -269,7 +269,7 @@ func watch(command, importable, bin, exts string, dobuild, withdir bool, args []
 
 		added := make(map[string]bool)
 
-		if dobuild {
+		if watchbuild {
 			watch, err = buildPkgWatcher(importable, added)
 		} else {
 			if !added["./"] {
@@ -389,7 +389,7 @@ func usage() {
 	fmt.Printf(`Watch:
     About: provides a simple but combined go dir builder and file watcher
     Version: %s
-    Usage: watch [--import] <import path> [--cmd] <cmd_to_rerun> [--ext] <extensions> [--bin] <bin path to store> --dir
+    Usage: watch [--import] <import path> [--cmd] <cmd_to_rerun> [--ext] <extensions> [--bin] <bin path to store> --dir --nobin
     `, version)
 }
 
@@ -401,6 +401,7 @@ func main() {
 	withdir := flag.Bool("dir", false, "This sets the current directories and subdirectories to be watched")
 	bindir := flag.String("bin", "./bin", "The build directory for storing the build file")
 	importdir := flag.String("import", "", "Command to run instead on every change")
+	nobin := flag.Bool("nobin", false, "This sets the watcher to watch for files in the package giving in the import option and in the current directory without building a binary file for running")
 
 	flag.Parse()
 
@@ -409,9 +410,10 @@ func main() {
 		return
 	}
 
-	build := (*importdir != "")
+	build := (*importdir != "" && !(*nobin))
+	watchbuild := (*importdir != "")
 
-	err := watch(*cmd, *importdir, *bindir, *exts, build, *withdir, flag.Args())
+	err := watch(*cmd, *importdir, *bindir, *exts, build, watchbuild, *withdir, flag.Args())
 
 	if err != nil {
 		log.Printf("Errored: %s", err.Error())
