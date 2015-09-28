@@ -389,7 +389,8 @@ func usage() {
 	fmt.Printf(`Watch:
     About: provides a simple but combined go dir builder and file watcher
     Version: %s
-    Usage: watch [--import] <import path> [--cmd] <cmd_to_rerun> [--ext] <extensions> [--bin] <bin path to store> --dir --nobin
+    Usage: watch [--import] <import path> [--cmd] <cmd_to_rerun>
+		[--ext] <extensions> [--bin] <bin path to store> --dir --nobin
     `, version)
 }
 
