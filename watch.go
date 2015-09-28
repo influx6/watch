@@ -194,6 +194,7 @@ func add2Watcher(ws *fsnotify.Watcher, pkgpath string, assets map[string]bool) {
 	pkg, err := build.Import(pkgpath, "", 0)
 
 	if err != nil {
+		log.Printf("Import path watch error %s", err.Error())
 		return
 	}
 
@@ -270,6 +271,7 @@ func watch(command, importable, bin, exts string, dobuild, watchbuild, withdir b
 		added := make(map[string]bool)
 
 		if watchbuild {
+			log.Printf("Watch import Path enabled")
 			watch, err = buildPkgWatcher(importable, added)
 		} else {
 			if !added["./"] {
@@ -449,6 +451,10 @@ func main() {
 
 	build := (*importdir != "" && !(*nobin))
 	watchbuild := (*importdir != "")
+
+	if watchbuild {
+		log.Printf("Import build path: %s", *importdir)
+	}
 
 	err := watch(*cmd, *importdir, *bindir, *exts, build, watchbuild, *withdir, flag.Args())
 
