@@ -386,15 +386,48 @@ func watch(command, importable, bin, exts string, dobuild, watchbuild, withdir b
 }
 
 func usage() {
-	fmt.Printf(`Watch:
-    About: provides a simple but combined go dir builder and file watcher
-    Version: %s
-    Usage: watch [--import] <import path> [--cmd] <cmd_to_rerun>
-		[--ext] <extensions> [--bin] <bin path to store> --dir --nobin
+	fmt.Printf(`
+About: provides a simple but combined go dir builder and file watcher
+Version: %s
+Usage: watch [--import] <import path> [--cmd] <cmd_to_rerun>
+[--ext] <extensions> [--bin] <bin path to store> --dir --nobin
+
+Parameter Explantions:
+
+	--ext: a space seperated string of extensions to watch
+	--cmd : Command to run instead on every change
+	--withdir: This sets the current directories and subdirectories to be watched
+	--bindir: The build directory for storing the build file
+	--importdir: Command to run instead on every change")
+	--nobin: sets the watcher to watch for changes in the package import path and in the current directory without building a binary file for running
+
+
+Examples:
+
+  - Build project directory on any change:
+
+      watch  --import github.com/influx6/todo
+
+  - Watch project directory import (and the current directory) path only without building for changes then run a command:
+
+      watch  --import github.com/influx6/todo --dir --cmd "gopherjs build" --nobin
+
+  - Build project directory and subdirectories files on any change:
+
+      watch  --import github.com/influx6/todo --dir
+
+  - Run command on any change within current directory
+
+      watch  --cmd "echo 'dude'"
+
+  - Build project directory on any change,run command and only watch files in extensions:
+
+      watch  --import github.com/influx6/todo --cmd "echo 'dude'" --ext ".go .tmpl .js"
+
     `, version)
 }
 
-var version = "0.0.1"
+var version = "0.0.2"
 
 func main() {
 	exts := flag.String("ext", "", "a space seperated string of extensions to watch")
@@ -406,7 +439,10 @@ func main() {
 
 	flag.Parse()
 
+	flag.Usage = usage
+
 	if *cmd == "" && *importdir == "" {
+		// flag.PrintDefaults()
 		usage()
 		return
 	}
